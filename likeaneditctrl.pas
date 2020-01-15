@@ -97,6 +97,72 @@ type
     property TextHint: TTranslateString read GetTextHint write SetTextHint;
   end;
 
+  TLikeAnEdit = class(TCustomLikeAnEdit)
+  public
+    property AutoSelected;
+  published
+    property Align;
+    property Alignment;
+    property Anchors;
+    property AutoSize;
+    property AutoSelect;
+    property BidiMode;
+    property BorderSpacing;
+    property BorderStyle;
+    property CharCase;
+    property Color;
+    property Constraints;
+    property DoubleBuffered;
+    property DragCursor;
+    property DragKind;
+    property DragMode;
+    property EchoMode;
+    property Enabled;
+    property Font;
+    property HideSelection;
+    property MaxLength;
+    property NumbersOnly;
+    property ParentBidiMode;
+    property OnChange;
+    property OnChangeBounds;
+    property OnClick;
+    property OnContextPopup;
+    property OnDblClick;
+    property OnDragDrop;
+    property OnDragOver;
+    property OnEditingDone;
+    property OnEndDrag;
+    property OnEnter;
+    property OnExit;
+    property OnKeyDown;
+    property OnKeyPress;
+    property OnKeyUp;
+    property OnMouseDown;
+    property OnMouseEnter;
+    property OnMouseLeave;
+    property OnMouseMove;
+    property OnMouseUp;
+    property OnMouseWheel;
+    property OnMouseWheelDown;
+    property OnMouseWheelUp;
+    property OnResize;
+    property OnStartDrag;
+    property OnUTF8KeyPress;
+    property ParentColor;
+    property ParentDoubleBuffered;
+    property ParentFont;
+    property ParentShowHint;
+    property PasswordChar;
+    property PopupMenu;
+    property ReadOnly;
+    property ShowHint;
+    property TabStop;
+    property TabOrder;
+    property Text;
+    property TextHint;
+    property Visible;
+  end;
+
 function IsEditOrLikeEdit(c: TControl): Boolean; inline;
 
 implementation
