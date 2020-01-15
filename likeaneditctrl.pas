@@ -15,8 +15,10 @@ type
 
   TCustomLikeAnEdit = class(TCustomControl)
   private
+    fLeftPad: Integer;
     FOnChange: TNotifyEvent;
     FPasswordChar: Char;
+    fRightPad: Integer;
     function GetAlignment: TAlignment;
     function GetAutoSelect: Boolean;
     function GetAutoSelected: Boolean;
@@ -31,9 +33,11 @@ type
     procedure SetAutoSelected(AValue: Boolean);
     procedure SetCharCase(AValue: TEditCharCase);
     procedure SetHideSelection(AValue: Boolean);
+    procedure SetLeftPad(AValue: Integer);
     procedure SetMaxLength(AValue: Integer);
     procedure SetModified(AValue: Boolean);
     procedure SetPasswordChar(AValue: Char);
+    procedure SetRightPad(AValue: Integer);
   protected
     fEdit : TCustomEdit;
     procedure EditChange(Sender: TObject);
@@ -78,8 +82,13 @@ type
     function GetTextLen: Integer; override;
     procedure SetTextBuf(Buffer: PChar); override;
 
+    procedure GetPreferredSize(var PreferredWidth, PreferredHeight: integer;
+                               Raw: boolean = false;
+                               WithThemeSpace: boolean = true); override;
   public
     property Alignment: TAlignment read GetAlignment write SetAlignment;
+    property AutoSize default True;
+    property BorderStyle default bsSingle;
     property CanUndo: Boolean read GetCanUndo;
     property CaretPos: TPoint read GetCaretPos write SetCaretPos;
     property CharCase: TEditCharCase read GetCharCase write SetCharCase;
@@ -90,11 +99,15 @@ type
     property NumbersOnly: Boolean read GetNumbersOnly write SetNumbersOnly;
     property OnChange: TNotifyEvent read FOnChange write FOnChange;
     property PasswordChar: Char read FPasswordChar write SetPasswordChar;
+    property PopupMenu;
     property ReadOnly: Boolean read GetReadOnly write SetReadOnly;
     property SelLength: integer read GetSelLength write SetSelLength;
     property SelStart: integer read GetSelStart write SetSelStart;
     property SelText: String read GetSelText write SetSelText;
     property TextHint: TTranslateString read GetTextHint write SetTextHint;
+    property Text;
+    property LeftPadding: Integer read fLeftPad write SetLeftPad;
+    property RightPadding: Integer read fRightPad write SetRightPad;
   end;
 
   TLikeAnEdit = class(TCustomLikeAnEdit)
@@ -104,7 +117,7 @@ type
     property Align;
     property Alignment;
     property Anchors;
-    property AutoSize;
+    property AutoSize default true;
     property AutoSelect;
     property BidiMode;
     property BorderSpacing;
@@ -161,6 +174,8 @@ type
     property Text;
     property TextHint;
     property Visible;
+    property LeftPadding: Integer read fLeftPad write SetLeftPad;
+    property RightPadding: Integer read fRightPad write SetRightPad;
   end;
 
 function IsEditOrLikeEdit(c: TControl): Boolean; inline;
@@ -247,6 +262,14 @@ begin
   FEdit.HideSelection:=AValue;
 end;
 
+procedure TCustomLikeAnEdit.SetLeftPad(AValue: Integer);
+begin
+  AValue:=abs(AValue);
+  if fLeftPad=AValue then Exit;
+  fLeftPad:=AValue;
+  EditUpdateBounds;
+end;
+
 procedure TCustomLikeAnEdit.SetMaxLength(AValue: Integer);
 begin
   FEDit.MaxLength:=AValue;
@@ -261,6 +284,14 @@ procedure TCustomLikeAnEdit.SetPasswordChar(AValue: Char);
 begin
   if FPasswordChar=AValue then Exit;
   FPasswordChar:=AValue;
+end;
+
+procedure TCustomLikeAnEdit.SetRightPad(AValue: Integer);
+begin
+  AValue:=abs(AValue);
+  if fRightPad=AValue then Exit;
+  fRightPad:=AValue;
+  EditUpdateBounds;
 end;
 
 procedure TCustomLikeAnEdit.EditChange(Sender: TObject);
@@ -287,7 +318,7 @@ end;
 
 procedure TCustomLikeAnEdit.EditUpdateBounds;
 begin
-  fEdit.BoundsRect:=Bounds(0,0, Self.Width, Self.Height);
+  fEdit.BoundsRect:=Bounds(LeftPadding,0, Self.Width - LeftPadding-RightPadding, Self.Height);
 end;
 
 procedure TCustomLikeAnEdit.EditExit(Sender: TObject);
@@ -446,6 +477,13 @@ end;
 procedure TCustomLikeAnEdit.SetTextBuf(Buffer: PChar);
 begin
   fEdit.SetTextBuf(Buffer);
+end;
+
+procedure TCustomLikeAnEdit.GetPreferredSize(var PreferredWidth,
+  PreferredHeight: integer; Raw: boolean; WithThemeSpace: boolean);
+begin
+  fEdit.GetPreferredSize(PreferredWidth, PreferredHeight, Raw, WithThemeSpace);
+  PreferredWidth:=PreferredWidth+LeftPadding+RightPadding;
 end;
 
 end.
