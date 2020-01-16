@@ -5,38 +5,60 @@ unit likeaneditctrl;
 interface
 
 uses
-  LCLType,
-  Classes, SysUtils, Controls, StdCtrls, Graphics;
+  LCLType, WSLCLClasses, WSControls, WSStdCtrls,
+  Classes, SysUtils, Controls, StdCtrls, Graphics
+  {$ifdef mswindows}
+  , Win32WSControls, Win32WSStdCtrls
+  {$endif}
+  ;
 
 type
+
+  { TWSPretendCustomEdit }
+
+  TWSPretendCustomEdit = class(TWSCustomEdit)
+    class function CreateHandle(const AWinControl: TWinControl;
+      const AParams: TCreateParams): TLCLIntfHandle; override;
+
+    class function  GetText(const AWinControl: TWinControl; var AText: String): Boolean; override;
+    class function  GetTextLen(const AWinControl: TWinControl; var ALength: Integer): Boolean; override;
+    class procedure SetText(const AWinControl: TWinControl; const AText: String); override;
+
+    class function GetCanUndo(const ACustomEdit: TCustomEdit): Boolean; override;
+    class function GetCaretPos(const ACustomEdit: TCustomEdit): TPoint; override;
+    class function GetSelStart(const ACustomEdit: TCustomEdit): integer; override;
+    class function GetSelLength(const ACustomEdit: TCustomEdit): integer; override;
+
+    class procedure SetAlignment(const ACustomEdit: TCustomEdit; const AAlignment: TAlignment); override;
+    class procedure SetCaretPos(const ACustomEdit: TCustomEdit; const NewPos: TPoint); override;
+    class procedure SetCharCase(const ACustomEdit: TCustomEdit; NewCase: TEditCharCase); override;
+    class procedure SetEchoMode(const ACustomEdit: TCustomEdit; NewMode: TEchoMode); override;
+    class procedure SetHideSelection(const ACustomEdit: TCustomEdit; NewHideSelection: Boolean); override;
+    class procedure SetMaxLength(const ACustomEdit: TCustomEdit; NewLength: integer); override;
+    class procedure SetNumbersOnly(const ACustomEdit: TCustomEdit; NewNumbersOnly: Boolean); override;
+    class procedure SetPasswordChar(const ACustomEdit: TCustomEdit; NewChar: char); override;
+    class procedure SetReadOnly(const ACustomEdit: TCustomEdit; NewReadOnly: boolean); override;
+    class procedure SetSelStart(const ACustomEdit: TCustomEdit; NewStart: integer); override;
+    class procedure SetSelLength(const ACustomEdit: TCustomEdit; NewLength: integer); override;
+    class procedure SetSelText(const ACustomEdit: TCustomEdit; const NewSelText: string); override;
+    class procedure SetTextHint(const ACustomEdit: TCustomEdit; const ATextHint: string); override;
+    class function CreateEmulatedTextHintFont(const ACustomEdit: TCustomEdit): TFont; override;
+
+    class procedure Cut(const ACustomEdit: TCustomEdit); override;
+    class procedure Copy(const ACustomEdit: TCustomEdit); override;
+    class procedure Paste(const ACustomEdit: TCustomEdit); override;
+    class procedure Undo(const ACustomEdit: TCustomEdit); override;
+  end;
+
   // I will pretend I'm an edit. But I'm not, I only host one (or two... or more)
 
   { TCustomLikeAnEdit }
 
-  TCustomLikeAnEdit = class(TCustomControl)
+  TCustomLikeAnEdit = class(TCustomEdit)
   private
     fLeftPad: Integer;
-    FOnChange: TNotifyEvent;
-    FPasswordChar: Char;
     fRightPad: Integer;
-    function GetAlignment: TAlignment;
-    function GetAutoSelect: Boolean;
-    function GetAutoSelected: Boolean;
-    function GetCanUndo: Boolean;
-    function GetCharCase: TEditCharCase;
-    function GetEchoMode: TEchoMode;
-    function GetHideSelection: Boolean;
-    function GetMaxLength: Integer;
-    function GetModified: Boolean;
-    procedure SetAlignment(AValue: TAlignment);
-    procedure SetAutoSelect(AValue: Boolean);
-    procedure SetAutoSelected(AValue: Boolean);
-    procedure SetCharCase(AValue: TEditCharCase);
-    procedure SetHideSelection(AValue: Boolean);
     procedure SetLeftPad(AValue: Integer);
-    procedure SetMaxLength(AValue: Integer);
-    procedure SetModified(AValue: Boolean);
-    procedure SetPasswordChar(AValue: Char);
     procedure SetRightPad(AValue: Integer);
   protected
     fEdit : TCustomEdit;
@@ -47,65 +69,18 @@ type
     procedure EditExit(Sender: TObject);
     procedure EditEnter(Sender: TObject);
   protected
-    procedure Change; virtual;
-    function GetCaretPos: TPoint; virtual;
-    function GetNumbersOnly: Boolean; virtual;
-    function GetReadOnly: Boolean; virtual;
-    function GetSelLength: integer; virtual;
-    function GetSelStart: integer; virtual;
-    function GetSelText: string; virtual;
-    function GetTextHint: TTranslateString; virtual;
-    procedure SetCaretPos(const Value: TPoint); virtual;
-    procedure SetEchoMode(Val: TEchoMode); virtual;
-    procedure SetNumbersOnly(Value: Boolean); virtual;
-    procedure SetReadOnly(Value: Boolean); virtual;
-    procedure SetSelLength(Val: integer); virtual;
-    procedure SetSelStart(Val: integer); virtual;
-    procedure SetSelText(const Val: string); virtual;
-    procedure SetTextHint(const AValue: TTranslateString); virtual;
-
-    procedure SetBounds(ALeft, ATop, AWidth, AHeight: integer); override;
-
-    property AutoSelect: Boolean read GetAutoSelect write SetAutoSelect;
-    property AutoSelected: Boolean read GetAutoSelected write SetAutoSelected;
+    // this is LCL by-pass
+    class procedure WSRegisterClass; override;
+    function ChildClassAllowed(ChildClass: TClass): boolean; override;
+  protected
   public
     constructor Create(AOwner: TComponent); override;
-    procedure Clear;
-    procedure SelectAll;
-    procedure ClearSelection; virtual;
-    procedure CopyToClipboard; virtual;
-    procedure CutToClipboard; virtual;
-    procedure PasteFromClipboard; virtual;
-    procedure Undo; virtual;
-
-    function GetTextBuf(Buffer: PChar; BufSize: Integer): Integer; override;
-    function GetTextLen: Integer; override;
-    procedure SetTextBuf(Buffer: PChar); override;
-
     procedure GetPreferredSize(var PreferredWidth, PreferredHeight: integer;
                                Raw: boolean = false;
                                WithThemeSpace: boolean = true); override;
+    procedure SetBounds(ALeft, ATop, AWidth, AHeight: integer); override;
+    procedure SetFocus; override;
   public
-    property Alignment: TAlignment read GetAlignment write SetAlignment;
-    property AutoSize default True;
-    property BorderStyle default bsSingle;
-    property CanUndo: Boolean read GetCanUndo;
-    property CaretPos: TPoint read GetCaretPos write SetCaretPos;
-    property CharCase: TEditCharCase read GetCharCase write SetCharCase;
-    property EchoMode: TEchoMode read GetEchoMode write SetEchoMode;
-    property HideSelection: Boolean read GetHideSelection write SetHideSelection;
-    property MaxLength: Integer read GetMaxLength write SetMaxLength;
-    property Modified: Boolean read GetModified write SetModified;
-    property NumbersOnly: Boolean read GetNumbersOnly write SetNumbersOnly;
-    property OnChange: TNotifyEvent read FOnChange write FOnChange;
-    property PasswordChar: Char read FPasswordChar write SetPasswordChar;
-    property PopupMenu;
-    property ReadOnly: Boolean read GetReadOnly write SetReadOnly;
-    property SelLength: integer read GetSelLength write SetSelLength;
-    property SelStart: integer read GetSelStart write SetSelStart;
-    property SelText: String read GetSelText write SetSelText;
-    property TextHint: TTranslateString read GetTextHint write SetTextHint;
-    property Text;
     property LeftPadding: Integer read fLeftPad write SetLeftPad;
     property RightPadding: Integer read fRightPad write SetRightPad;
   end;
@@ -190,77 +165,251 @@ end;
 type
   TProtectedEdit = class(TCustomEdit);
 
+{ TWSPretendCustomEdit }
+
+class function TWSPretendCustomEdit.CreateHandle(
+  const AWinControl: TWinControl; const AParams: TCreateParams): TLCLIntfHandle;
+begin
+  {$ifdef mswindows}
+  Result:=TWin32WSWinControl.CreateHandle(AWinControl, Aparams);
+  {$endif}
+end;
+
+class function TWSPretendCustomEdit.GetText(const AWinControl: TWinControl;
+  var AText: String): Boolean;
+var
+  c : TCustomLikeAnEdit absolute AWinControl;
+begin
+  if not (AWinControl is TCustomLikeAnEdit) then begin
+    AText :='';
+    Result := false;
+    Exit;
+  end;
+  AText := c.fEdit.Text;
+  Result := true;
+end;
+
+class function TWSPretendCustomEdit.GetTextLen(const AWinControl: TWinControl;
+  var ALength: Integer): Boolean;
+var
+  c : TCustomLikeAnEdit absolute AWinControl;
+begin
+  if not (AWinControl is TCustomLikeAnEdit) then begin
+    ALength := 0;
+    Result := false;
+    Exit;
+  end;
+  ALength := c.fEdit.GetTextLen;
+  Result := true;
+end;
+
+class procedure TWSPretendCustomEdit.SetText(const AWinControl: TWinControl;
+  const AText: String);
+var
+  c : TCustomLikeAnEdit absolute AWinControl;
+begin
+  if not (AWinControl is TCustomLikeAnEdit) then Exit;
+  c.fEdit.Text := AText;
+end;
+
+class function TWSPretendCustomEdit.GetCanUndo(const ACustomEdit: TCustomEdit
+  ): Boolean;
+var
+  c : TCustomLikeAnEdit absolute ACustomEdit;
+begin
+  if not (ACustomEdit is TCustomLikeAnEdit) then begin
+    Result := false;
+    Exit;
+  end;
+  Result := c.fEdit.CanUndo;
+end;
+
+class function TWSPretendCustomEdit.GetCaretPos(const ACustomEdit: TCustomEdit
+  ): TPoint;
+var
+  c : TCustomLikeAnEdit absolute ACustomEdit;
+begin
+  if not (ACustomEdit is TCustomLikeAnEdit) then Exit;
+  Result := c.fEdit.CaretPos;
+end;
+
+class function TWSPretendCustomEdit.GetSelStart(const ACustomEdit: TCustomEdit
+  ): integer;
+var
+  c : TCustomLikeAnEdit absolute ACustomEdit;
+begin
+  if not (ACustomEdit is TCustomLikeAnEdit) then Exit;
+  Result := c.fEdit.SelStart;
+end;
+
+class function TWSPretendCustomEdit.GetSelLength(const ACustomEdit: TCustomEdit
+  ): integer;
+var
+  c : TCustomLikeAnEdit absolute ACustomEdit;
+begin
+  if not (ACustomEdit is TCustomLikeAnEdit) then Exit;
+  Result := c.fEdit.SelLength;
+end;
+
+class procedure TWSPretendCustomEdit.SetAlignment(
+  const ACustomEdit: TCustomEdit; const AAlignment: TAlignment);
+var
+  c : TCustomLikeAnEdit absolute ACustomEdit;
+begin
+  if not (ACustomEdit is TCustomLikeAnEdit) then Exit;
+  c.fEdit.Alignment:=AAlignment;
+end;
+
+class procedure TWSPretendCustomEdit.SetCaretPos(
+  const ACustomEdit: TCustomEdit; const NewPos: TPoint);
+var
+  c : TCustomLikeAnEdit absolute ACustomEdit;
+begin
+  if not (ACustomEdit is TCustomLikeAnEdit) then Exit;
+  c.fEdit.CaretPos := NewPos;
+end;
+
+class procedure TWSPretendCustomEdit.SetCharCase(
+  const ACustomEdit: TCustomEdit; NewCase: TEditCharCase);
+var
+  c : TCustomLikeAnEdit absolute ACustomEdit;
+begin
+  if not (ACustomEdit is TCustomLikeAnEdit) then Exit;
+  c.fEdit.CharCase:=NewCase;
+end;
+
+class procedure TWSPretendCustomEdit.SetEchoMode(
+  const ACustomEdit: TCustomEdit; NewMode: TEchoMode);
+var
+  c : TCustomLikeAnEdit absolute ACustomEdit;
+begin
+  if not (ACustomEdit is TCustomLikeAnEdit) then Exit;
+  c.fEdit.EchoMode:=NewMode;
+end;
+
+class procedure TWSPretendCustomEdit.SetHideSelection(
+  const ACustomEdit: TCustomEdit; NewHideSelection: Boolean);
+var
+  c : TCustomLikeAnEdit absolute ACustomEdit;
+begin
+  if not (ACustomEdit is TCustomLikeAnEdit) then Exit;
+  c.fEdit.HideSelection:=NewHideSelection;
+end;
+
+class procedure TWSPretendCustomEdit.SetMaxLength(
+  const ACustomEdit: TCustomEdit; NewLength: integer);
+var
+  c : TCustomLikeAnEdit absolute ACustomEdit;
+begin
+  if not (ACustomEdit is TCustomLikeAnEdit) then Exit;
+  c.fEdit.MaxLength:=NewLength;
+end;
+
+class procedure TWSPretendCustomEdit.SetNumbersOnly(
+  const ACustomEdit: TCustomEdit; NewNumbersOnly: Boolean);
+var
+  c : TCustomLikeAnEdit absolute ACustomEdit;
+begin
+  if not (ACustomEdit is TCustomLikeAnEdit) then Exit;
+  c.fEdit.NumbersOnly:=NewNumbersOnly;
+end;
+
+class procedure TWSPretendCustomEdit.SetPasswordChar(
+  const ACustomEdit: TCustomEdit; NewChar: char);
+var
+  c : TCustomLikeAnEdit absolute ACustomEdit;
+begin
+  if not (ACustomEdit is TCustomLikeAnEdit) then Exit;
+  c.fEdit.PasswordChar:=NewChar;
+end;
+
+class procedure TWSPretendCustomEdit.SetReadOnly(
+  const ACustomEdit: TCustomEdit; NewReadOnly: boolean);
+var
+  c : TCustomLikeAnEdit absolute ACustomEdit;
+begin
+  if not (ACustomEdit is TCustomLikeAnEdit) then Exit;
+  c.fEdit.ReadOnly:=NewReadOnly;
+end;
+
+class procedure TWSPretendCustomEdit.SetSelStart(
+  const ACustomEdit: TCustomEdit; NewStart: integer);
+var
+  c : TCustomLikeAnEdit absolute ACustomEdit;
+begin
+  if not (ACustomEdit is TCustomLikeAnEdit) then Exit;
+  c.fEdit.SelStart:=NewStart;
+end;
+
+class procedure TWSPretendCustomEdit.SetSelLength(
+  const ACustomEdit: TCustomEdit; NewLength: integer);
+var
+  c : TCustomLikeAnEdit absolute ACustomEdit;
+begin
+  if not (ACustomEdit is TCustomLikeAnEdit) then Exit;
+  c.fEdit.SelLength:=NewLength;
+end;
+
+class procedure TWSPretendCustomEdit.SetSelText(const ACustomEdit: TCustomEdit;
+  const NewSelText: string);
+var
+  c : TCustomLikeAnEdit absolute ACustomEdit;
+begin
+  if not (ACustomEdit is TCustomLikeAnEdit) then Exit;
+  c.fEdit.SelText:=NewSelText;
+end;
+
+class procedure TWSPretendCustomEdit.SetTextHint(
+  const ACustomEdit: TCustomEdit; const ATextHint: string);
+var
+  c : TCustomLikeAnEdit absolute ACustomEdit;
+begin
+  if not (ACustomEdit is TCustomLikeAnEdit) then Exit;
+  c.fEdit.Hint:=ATextHint;
+end;
+
+class function TWSPretendCustomEdit.CreateEmulatedTextHintFont(
+  const ACustomEdit: TCustomEdit): TFont;
+var
+  c : TCustomLikeAnEdit absolute ACustomEdit;
+begin
+  if not (ACustomEdit is TCustomLikeAnEdit) then Exit;
+  Result := TProtectedEdit(c.fEdit).CreateEmulatedTextHintFont;
+end;
+
+class procedure TWSPretendCustomEdit.Cut(const ACustomEdit: TCustomEdit);
+var
+  c : TCustomLikeAnEdit absolute ACustomEdit;
+begin
+  if not (ACustomEdit is TCustomLikeAnEdit) then Exit;
+  c.fEdit.CutToClipboard;
+end;
+
+class procedure TWSPretendCustomEdit.Copy(const ACustomEdit: TCustomEdit);
+var
+  c : TCustomLikeAnEdit absolute ACustomEdit;
+begin
+  if not (ACustomEdit is TCustomLikeAnEdit) then Exit;
+  c.fEdit.CopyToClipboard;
+end;
+
+class procedure TWSPretendCustomEdit.Paste(const ACustomEdit: TCustomEdit);
+var
+  c : TCustomLikeAnEdit absolute ACustomEdit;
+begin
+  if not (ACustomEdit is TCustomLikeAnEdit) then Exit;
+  c.fEdit.PasteFromClipboard;
+end;
+
+class procedure TWSPretendCustomEdit.Undo(const ACustomEdit: TCustomEdit);
+var
+  c : TCustomLikeAnEdit absolute ACustomEdit;
+begin
+  if not (ACustomEdit is TCustomLikeAnEdit) then Exit;
+  c.fEdit.Undo;
+end;
+
 { TCustomLikeAnEdit }
-
-function TCustomLikeAnEdit.GetAlignment: TAlignment;
-begin
-  Result:=fEdit.Alignment;
-end;
-
-function TCustomLikeAnEdit.GetAutoSelect: Boolean;
-begin
-  Result:=TProtectedEdit(fEdit).Autoselect;
-end;
-
-function TCustomLikeAnEdit.GetAutoSelected: Boolean;
-begin
-  Result:=TProtectedEdit(fEdit).Autoselected;
-end;
-
-function TCustomLikeAnEdit.GetCanUndo: Boolean;
-begin
-  Result:=fEdit.CanUndo;
-end;
-
-function TCustomLikeAnEdit.GetCharCase: TEditCharCase;
-begin
-  Result:=fEdit.CharCase;
-end;
-
-function TCustomLikeAnEdit.GetEchoMode: TEchoMode;
-begin
-  Result:=fEdit.EchoMode;
-end;
-
-function TCustomLikeAnEdit.GetHideSelection: Boolean;
-begin
-  Result:=fEdit.HideSelection;
-end;
-
-function TCustomLikeAnEdit.GetMaxLength: Integer;
-begin
-  Result:=fEdit.MaxLength;
-end;
-
-function TCustomLikeAnEdit.GetModified: Boolean;
-begin
-  Result:=fEdit.Modified;
-end;
-
-procedure TCustomLikeAnEdit.SetAlignment(AValue: TAlignment);
-begin
-  fEdit.Alignment:=AValue;
-end;
-
-procedure TCustomLikeAnEdit.SetAutoSelect(AValue: Boolean);
-begin
-  TProtectedEdit(fEdit).AutoSelect := AValue;
-end;
-
-procedure TCustomLikeAnEdit.SetAutoSelected(AValue: Boolean);
-begin
-  TProtectedEdit(fEdit).AutoSelected := AValue;
-end;
-
-procedure TCustomLikeAnEdit.SetCharCase(AValue: TEditCharCase);
-begin
-  fEdit.CharCase:=AValue;
-end;
-
-procedure TCustomLikeAnEdit.SetHideSelection(AValue: Boolean);
-begin
-  FEdit.HideSelection:=AValue;
-end;
 
 procedure TCustomLikeAnEdit.SetLeftPad(AValue: Integer);
 begin
@@ -270,21 +419,6 @@ begin
   EditUpdateBounds;
 end;
 
-procedure TCustomLikeAnEdit.SetMaxLength(AValue: Integer);
-begin
-  FEDit.MaxLength:=AValue;
-end;
-
-procedure TCustomLikeAnEdit.SetModified(AValue: Boolean);
-begin
-  FEdit.Modified:=AValue;
-end;
-
-procedure TCustomLikeAnEdit.SetPasswordChar(AValue: Char);
-begin
-  if FPasswordChar=AValue then Exit;
-  FPasswordChar:=AValue;
-end;
 
 procedure TCustomLikeAnEdit.SetRightPad(AValue: Integer);
 begin
@@ -331,96 +465,25 @@ begin
   DoEnter;
 end;
 
+class procedure TCustomLikeAnEdit.WSRegisterClass;
+begin
+  RegisterWSComponent(TCustomLikeAnEdit, TWSPretendCustomEdit);
+end;
+
+function TCustomLikeAnEdit.ChildClassAllowed(ChildClass: TClass): boolean;
+begin
+  Result:=true;
+end;
+
 constructor TCustomLikeAnEdit.Create(AOwner: TComponent);
 begin
   inherited Create(AOwner);
+  ControlStyle := ControlStyle + [csAcceptsControls, csCaptureMouse,
+      csClickEvents, csSetCaption, csDoubleClicks, csReplicatable,
+      csNoFocus, csAutoSize0x0, csParentBackground];
   fEdit:=EditAlloc;
   EditPrepare;
   EditUpdateBounds;
-end;
-
-procedure TCustomLikeAnEdit.Change;
-begin
-  Changed;
-  if Assigned(FOnChange) then FOnChange(Self);
-  //todo:
-  //if Assigned(FOnChangeHandler) then
-  //  FOnChangeHandler.CallNotifyEvents(Self);
-end;
-
-function TCustomLikeAnEdit.GetCaretPos: TPoint;
-begin
-  Result:=fEdit.CaretPos;
-end;
-
-function TCustomLikeAnEdit.GetNumbersOnly: Boolean;
-begin
-  Result:=fEdit.NumbersOnly;
-end;
-
-function TCustomLikeAnEdit.GetReadOnly: Boolean;
-begin
-  Result:=fEdit.ReadOnly;
-end;
-
-function TCustomLikeAnEdit.GetSelLength: integer;
-begin
-  Result:=fEdit.SelLength;
-end;
-
-function TCustomLikeAnEdit.GetSelStart: integer;
-begin
-  Result:=fEdit.SelStart;
-end;
-
-function TCustomLikeAnEdit.GetSelText: string;
-begin
-  Result:=fEdit.SelText;
-end;
-
-function TCustomLikeAnEdit.GetTextHint: TTranslateString;
-begin
-  Result:=fEdit.TextHint;
-end;
-
-procedure TCustomLikeAnEdit.SetCaretPos(const Value: TPoint);
-begin
-  fEdit.CaretPos:=Value;
-end;
-
-procedure TCustomLikeAnEdit.SetEchoMode(Val: TEchoMode);
-begin
-  fEdit.EchoMode:=Val;
-end;
-
-procedure TCustomLikeAnEdit.SetNumbersOnly(Value: Boolean);
-begin
-  fEdit.NumbersOnly:=Value;
-end;
-
-procedure TCustomLikeAnEdit.SetReadOnly(Value: Boolean);
-begin
-  fEdit.ReadOnly:=Value;
-end;
-
-procedure TCustomLikeAnEdit.SetSelLength(Val: integer);
-begin
-  fEdit.SelLength:=Val;
-end;
-
-procedure TCustomLikeAnEdit.SetSelStart(Val: integer);
-begin
-  fEdit.SelStart:=Val;
-end;
-
-procedure TCustomLikeAnEdit.SetSelText(const Val: string);
-begin
-  fEdit.SelText:=Val;
-end;
-
-procedure TCustomLikeAnEdit.SetTextHint(const AValue: TTranslateString);
-begin
-  fEdit.TextHint:=AValue;
 end;
 
 procedure TCustomLikeAnEdit.SetBounds(ALeft, ATop, AWidth, AHeight: integer);
@@ -429,54 +492,9 @@ begin
   EditUpdateBounds;
 end;
 
-procedure TCustomLikeAnEdit.Clear;
+procedure TCustomLikeAnEdit.SetFocus;
 begin
-  fEdit.Clear;
-end;
-
-procedure TCustomLikeAnEdit.SelectAll;
-begin
-  fEdit.SelectAll;
-end;
-
-procedure TCustomLikeAnEdit.ClearSelection;
-begin
-  fEdit.ClearSelection;
-end;
-
-procedure TCustomLikeAnEdit.CopyToClipboard;
-begin
-  fEdit.CopyToClipboard;
-end;
-
-procedure TCustomLikeAnEdit.CutToClipboard;
-begin
-  fEdit.CutToClipboard;
-end;
-
-procedure TCustomLikeAnEdit.PasteFromClipboard;
-begin
-  fEdit.PasteFromClipboard;
-end;
-
-procedure TCustomLikeAnEdit.Undo;
-begin
-  fEdit.Undo;
-end;
-
-function TCustomLikeAnEdit.GetTextBuf(Buffer: PChar; BufSize: Integer): Integer;
-begin
-  Result:=fEdit.GetTextBuf(Buffer, BufSize);
-end;
-
-function TCustomLikeAnEdit.GetTextLen: Integer;
-begin
-  Result:=fEdit.GetTextLen;
-end;
-
-procedure TCustomLikeAnEdit.SetTextBuf(Buffer: PChar);
-begin
-  fEdit.SetTextBuf(Buffer);
+  fEdit.SetFocus;
 end;
 
 procedure TCustomLikeAnEdit.GetPreferredSize(var PreferredWidth,
